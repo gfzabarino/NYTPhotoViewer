@@ -273,12 +273,23 @@ static const UIEdgeInsets NYTPhotosViewControllerCloseButtonImageInsets = {3, 0,
     if (!clientDidHandle && (self.currentlyDisplayedPhoto.image || self.currentlyDisplayedPhoto.imageData)) {
         UIImage *image = self.currentlyDisplayedPhoto.image ? self.currentlyDisplayedPhoto.image : [UIImage imageWithData:self.currentlyDisplayedPhoto.imageData];
         UIActivityViewController *activityViewController = [[UIActivityViewController alloc] initWithActivityItems:@[image] applicationActivities:nil];
-        activityViewController.popoverPresentationController.barButtonItem = sender;
-        activityViewController.completionWithItemsHandler = ^(NSString * __nullable activityType, BOOL completed, NSArray * __nullable returnedItems, NSError * __nullable activityError) {
-            if (completed && [self.delegate respondsToSelector:@selector(photosViewController:actionCompletedWithActivityType:)]) {
-                [self.delegate photosViewController:self actionCompletedWithActivityType:activityType];
-            }
-        };
+        if ([activityViewController respondsToSelector:@selector(popoverPresentationController)]) {
+            activityViewController.popoverPresentationController.barButtonItem = sender;
+        }
+        if ([activityViewController respondsToSelector:@selector(completionWithItemsHandler)]) {
+            activityViewController.completionWithItemsHandler = ^(NSString * __nullable activityType, BOOL completed, NSArray * __nullable returnedItems, NSError * __nullable activityError) {
+                if (completed && [self.delegate respondsToSelector:@selector(photosViewController:actionCompletedWithActivityType:)]) {
+                    [self.delegate photosViewController:self actionCompletedWithActivityType:activityType];
+                }
+            };
+        }
+        else {
+            activityViewController.completionHandler = ^(NSString *activityType, BOOL completed) {
+                if (completed && [self.delegate respondsToSelector:@selector(photosViewController:actionCompletedWithActivityType:)]) {
+                    [self.delegate photosViewController:self actionCompletedWithActivityType:activityType];
+                }
+            };
+        }
 
         [self displayActivityViewController:activityViewController animated:YES];
     }
