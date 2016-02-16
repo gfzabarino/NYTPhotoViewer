@@ -7,6 +7,7 @@
 //
 
 #import "NYTPhotoDismissalInteractionController.h"
+#import "NYTOperatingSystemCompatibilityUtility.h"
 
 static const CGFloat NYTPhotoDismissalInteractionControllerPanDismissDistanceRatio = 50.0 / 667.0; // distance over iPhone 6 height.
 static const CGFloat NYTPhotoDismissalInteractionControllerPanDismissMaximumDuration = 0.45;
@@ -23,7 +24,7 @@ static const CGFloat NYTPhotoDismissalInteractionControllerReturnToCenterVelocit
 #pragma mark - NYTPhotoDismissalInteractionController
 
 - (void)didPanWithPanGestureRecognizer:(UIPanGestureRecognizer *)panGestureRecognizer viewToPan:(UIView *)viewToPan anchorPoint:(CGPoint)anchorPoint {
-    UIView *fromView = [self.transitionContext viewForKey:UITransitionContextFromViewKey];
+    UIView *fromView = [NYTOperatingSystemCompatibilityUtility fromViewForTransitionContext:self.transitionContext];
     CGPoint translatedPanGesturePoint = [panGestureRecognizer translationInView:fromView];
     CGPoint newCenterPoint = CGPointMake(anchorPoint.x, anchorPoint.y + translatedPanGesturePoint.y);
     
@@ -41,7 +42,7 @@ static const CGFloat NYTPhotoDismissalInteractionControllerReturnToCenterVelocit
 }
 
 - (void)finishPanWithPanGestureRecognizer:(UIPanGestureRecognizer *)panGestureRecognizer verticalDelta:(CGFloat)verticalDelta viewToPan:(UIView *)viewToPan anchorPoint:(CGPoint)anchorPoint {
-    UIView *fromView = [self.transitionContext viewForKey:UITransitionContextFromViewKey];
+    UIView *fromView = [NYTOperatingSystemCompatibilityUtility fromViewForTransitionContext:self.transitionContext];
     
     // Return to center case.
     CGFloat velocityY = [panGestureRecognizer velocityInView:panGestureRecognizer.view].y;
@@ -111,7 +112,7 @@ static const CGFloat NYTPhotoDismissalInteractionControllerReturnToCenterVelocit
     CGFloat finalAlpha = 0.1;
     CGFloat totalAvailableAlpha = startingAlpha - finalAlpha;
     
-    CGFloat maximumDelta = CGRectGetHeight([self.transitionContext viewForKey:UITransitionContextFromViewKey].bounds) / 2.0; // Arbitrary value.
+    CGFloat maximumDelta = CGRectGetHeight([NYTOperatingSystemCompatibilityUtility fromViewForTransitionContext:self.transitionContext].bounds) / 2.0; // Arbitrary value.
     CGFloat deltaAsPercentageOfMaximum = MIN(ABS(verticalDelta) / maximumDelta, 1.0);
     
     return startingAlpha - (deltaAsPercentageOfMaximum * totalAvailableAlpha);

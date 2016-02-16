@@ -41,6 +41,9 @@
 		B5DC9D911A9F793200F4F81F /* NYTPhotoTransitionAnimatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B5DC9D901A9F793200F4F81F /* NYTPhotoTransitionAnimatorTests.m */; };
 		B5DC9D9A1A9FB0C000F4F81F /* NYTPhotosDataSourceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B5DC9D991A9FB0C000F4F81F /* NYTPhotosDataSourceTests.m */; };
 		C2764961179EFD3A4397B4F6 /* libPods-NYTPhotoViewer-Swift.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C25ACCAFE75703E4107C21D /* libPods-NYTPhotoViewer-Swift.a */; };
+		E4C183881C735CC80082C06D /* NYTTestiOS7TransitionContext.m in Sources */ = {isa = PBXBuildFile; fileRef = E4C183851C735CC80082C06D /* NYTTestiOS7TransitionContext.m */; };
+		E4C183891C735CC80082C06D /* NYTTestiOS8TransitionContext.m in Sources */ = {isa = PBXBuildFile; fileRef = E4C183871C735CC80082C06D /* NYTTestiOS8TransitionContext.m */; };
+		E4C1838B1C735CD30082C06D /* NYTOperatingSystemCompatibilityUtilityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E4C1838A1C735CD30082C06D /* NYTOperatingSystemCompatibilityUtilityTests.m */; };
 		EC1B97111BA675DC00C9C9FD /* giphy.gif in Resources */ = {isa = PBXBuildFile; fileRef = EC1B97101BA675DC00C9C9FD /* giphy.gif */; };
 		EC1B97121BA675DC00C9C9FD /* giphy.gif in Resources */ = {isa = PBXBuildFile; fileRef = EC1B97101BA675DC00C9C9FD /* giphy.gif */; };
 		EC1B97131BA67E6700C9C9FD /* giphy.gif in Resources */ = {isa = PBXBuildFile; fileRef = EC1B97101BA675DC00C9C9FD /* giphy.gif */; };
@@ -108,6 +111,11 @@
 		B5DC9D991A9FB0C000F4F81F /* NYTPhotosDataSourceTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NYTPhotosDataSourceTests.m; sourceTree = "<group>"; };
 		C260A188D0E255B25171088B /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		C3A795E41A9CE3AA00A5AF55 /* NYTPhotoViewer.podspec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = NYTPhotoViewer.podspec; path = ../NYTPhotoViewer.podspec; sourceTree = "<group>"; };
+		E4C183841C735CC80082C06D /* NYTTestiOS7TransitionContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NYTTestiOS7TransitionContext.h; sourceTree = "<group>"; };
+		E4C183851C735CC80082C06D /* NYTTestiOS7TransitionContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NYTTestiOS7TransitionContext.m; sourceTree = "<group>"; };
+		E4C183861C735CC80082C06D /* NYTTestiOS8TransitionContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NYTTestiOS8TransitionContext.h; sourceTree = "<group>"; };
+		E4C183871C735CC80082C06D /* NYTTestiOS8TransitionContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NYTTestiOS8TransitionContext.m; sourceTree = "<group>"; };
+		E4C1838A1C735CD30082C06D /* NYTOperatingSystemCompatibilityUtilityTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NYTOperatingSystemCompatibilityUtilityTests.m; sourceTree = "<group>"; };
 		EC1B97101BA675DC00C9C9FD /* giphy.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = giphy.gif; sourceTree = "<group>"; };
 		FA400B174395C59C5DF305C6 /* Pods-NYTPhotoViewer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NYTPhotoViewer.release.xcconfig"; path = "Pods/Target Support Files/Pods-NYTPhotoViewer/Pods-NYTPhotoViewer.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -223,6 +231,8 @@
 				B5DC9D8E1A9F776100F4F81F /* NYTScalingImageViewTests.m */,
 				B5DC9D901A9F793200F4F81F /* NYTPhotoTransitionAnimatorTests.m */,
 				B5DC9D991A9FB0C000F4F81F /* NYTPhotosDataSourceTests.m */,
+				E4C1838A1C735CD30082C06D /* NYTOperatingSystemCompatibilityUtilityTests.m */,
+				E4C1838C1C735CEE0082C06D /* Test Objects */,
 				6003F5B6195388D20070C39A /* Supporting Files */,
 			);
 			path = Tests;
@@ -291,6 +301,17 @@
 				49CD4B2FD524DCA01A37028A /* Pods-NYTPhotoViewer-SwiftTests.release.xcconfig */,
 			);
 			name = Pods;
+			sourceTree = "<group>";
+		};
+		E4C1838C1C735CEE0082C06D /* Test Objects */ = {
+			isa = PBXGroup;
+			children = (
+				E4C183841C735CC80082C06D /* NYTTestiOS7TransitionContext.h */,
+				E4C183851C735CC80082C06D /* NYTTestiOS7TransitionContext.m */,
+				E4C183861C735CC80082C06D /* NYTTestiOS8TransitionContext.h */,
+				E4C183871C735CC80082C06D /* NYTTestiOS8TransitionContext.m */,
+			);
+			name = "Test Objects";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -591,7 +612,10 @@
 				B5DC9D9A1A9FB0C000F4F81F /* NYTPhotosDataSourceTests.m in Sources */,
 				B5DC9D8F1A9F776100F4F81F /* NYTScalingImageViewTests.m in Sources */,
 				B5DC9D821A9D04D300F4F81F /* NYTPhotosViewControllerTests.m in Sources */,
+				E4C183891C735CC80082C06D /* NYTTestiOS8TransitionContext.m in Sources */,
 				B5DC9D871A9D326700F4F81F /* NYTPhotoViewControllerTests.m in Sources */,
+				E4C1838B1C735CD30082C06D /* NYTOperatingSystemCompatibilityUtilityTests.m in Sources */,
+				E4C183881C735CC80082C06D /* NYTTestiOS7TransitionContext.m in Sources */,
 				B5DC9D8B1A9F6C9800F4F81F /* NYTPhotosOverlayViewTests.m in Sources */,
 				B5DC9D891A9D35C500F4F81F /* NYTPhotoCaptionViewTests.m in Sources */,
 			);
