@@ -150,7 +150,13 @@ static const CGFloat NYTPhotoDismissalInteractionControllerReturnToCenterVelocit
             .patchVersion = 0
         };
 
-        isRadar20070670Fixed = [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:iOSVersion8Point3];
+        NSProcessInfo *processInfo = [NSProcessInfo processInfo];
+        if ([processInfo respondsToSelector:@selector(isOperatingSystemAtLeastVersion:)]) {
+            isRadar20070670Fixed = [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:iOSVersion8Point3];
+        }
+        else {
+            isRadar20070670Fixed = NO;
+        }
     });
 
     return isRadar20070670Fixed;
