@@ -48,7 +48,7 @@ static const CGFloat NYTPhotoDismissalInteractionControllerReturnToCenterVelocit
     CGFloat velocityY = [panGestureRecognizer velocityInView:panGestureRecognizer.view].y;
     
     CGFloat animationDuration = (ABS(velocityY) * NYTPhotoDismissalInteractionControllerReturnToCenterVelocityAnimationRatio) + 0.2;
-    CGFloat animationCurve = UIViewAnimationOptionCurveEaseOut;
+    UIViewAnimationOptions animationCurve = UIViewAnimationOptionCurveEaseOut;
     CGPoint finalPageViewCenterPoint = anchorPoint;
     CGFloat finalBackgroundAlpha = 1.0;
     
@@ -168,6 +168,19 @@ static const CGFloat NYTPhotoDismissalInteractionControllerReturnToCenterVelocit
     self.viewToHideWhenBeginningTransition.alpha = 0.0;
     
     self.transitionContext = transitionContext;
+
+    UIView *fromView = [NYTOperatingSystemCompatibilityUtility fromViewForTransitionContext:self.transitionContext];
+    UIView *toView = [NYTOperatingSystemCompatibilityUtility toViewForTransitionContext:self.transitionContext];
+
+    toView.frame = [NYTOperatingSystemCompatibilityUtility finalFrameForToViewControllerWithTransitionContext:transitionContext];
+
+    // when the presented view controller uses a full screen modal presentation style
+    // the presenter's view is removed from the window, so we add it back before
+    // transitioning
+    if (![toView isDescendantOfView:transitionContext.containerView]) {
+        [transitionContext.containerView addSubview:toView];
+        [transitionContext.containerView bringSubviewToFront:fromView];
+    }
 }
 
 @end

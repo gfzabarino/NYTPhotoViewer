@@ -127,15 +127,15 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
     // in the transitionContext's containerView. For non-portrait orientations on iOS 7, we must
     // manually add a rotation transform to account for the containerView thinking it is always in portrait
     UIViewController *fromViewController = [transitionContext viewControllerForKey:UITransitionContextFromViewControllerKey];
+    UIViewController *toViewController = [transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
     BOOL isOrientationPortrait = UIInterfaceOrientationIsPortrait(fromViewController.interfaceOrientation);
 
+    // Correct the endingView and startingView's initial transforms
+    endingViewForAnimation.transform = CGAffineTransformConcat([self transformFromOrientation:fromViewController.interfaceOrientation toOrientation:toViewController.interfaceOrientation], endingViewForAnimation.transform);
+    startingViewForAnimation.transform = CGAffineTransformConcat([self transformFromOrientation:fromViewController.interfaceOrientation toOrientation:toViewController.interfaceOrientation], startingViewForAnimation.transform);
     if (![NYTOperatingSystemCompatibilityUtility isiOS8OrGreater] && !isOrientationPortrait) {
-        // Correct the endingView and startingView's initial transforms
-        endingViewForAnimation.transform = CGAffineTransformConcat([self transformForOrientation:fromViewController.interfaceOrientation], endingViewForAnimation.transform);
-        startingViewForAnimation.transform = CGAffineTransformConcat([self transformForOrientation:fromViewController.interfaceOrientation], startingViewForAnimation.transform);
-
         // Correct the endingView's final transform
-        finalEndingViewTransform = CGAffineTransformConcat([self transformForOrientation:fromViewController.interfaceOrientation], self.endingView.transform);
+        finalEndingViewTransform = CGAffineTransformConcat([self transformFromOrientation:fromViewController.interfaceOrientation toOrientation:toViewController.interfaceOrientation], self.endingView.transform);
     }
     else {
         finalEndingViewTransform = self.endingView.transform;
@@ -205,21 +205,69 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
 
 #pragma mark - Convenience
 
-- (CGAffineTransform)transformForOrientation:(UIInterfaceOrientation)orientation {
-    switch (orientation) {
-        case UIInterfaceOrientationLandscapeLeft:
-            return CGAffineTransformMakeRotation(-M_PI / 2.0);
+- (CGAffineTransform)transformFromOrientation:(UIInterfaceOrientation)fromOrientation toOrientation:(UIInterfaceOrientation)toOrientation {
+    if (fromOrientation == UIInterfaceOrientationPortrait) {
+        switch (toOrientation) {
+            case UIInterfaceOrientationLandscapeLeft:
+                return CGAffineTransformMakeRotation(M_PI / 2.0);
 
-        case UIInterfaceOrientationLandscapeRight:
-            return CGAffineTransformMakeRotation(M_PI / 2.0);
+            case UIInterfaceOrientationLandscapeRight:
+                return CGAffineTransformMakeRotation(-M_PI / 2.0);
 
-        case UIInterfaceOrientationPortraitUpsideDown:
-            return CGAffineTransformMakeRotation(M_PI);
+            case UIInterfaceOrientationPortraitUpsideDown:
+                return CGAffineTransformMakeRotation(M_PI);
 
-        case UIInterfaceOrientationPortrait:
-        default:
-            return CGAffineTransformMakeRotation(0);
+            case UIInterfaceOrientationPortrait:
+            default:
+                return CGAffineTransformMakeRotation(0);
+        }
+    } else if (fromOrientation == UIInterfaceOrientationLandscapeLeft) {
+        switch (toOrientation) {
+            case UIInterfaceOrientationPortraitUpsideDown:
+                return CGAffineTransformMakeRotation(M_PI / 2.0);
+
+            case UIInterfaceOrientationPortrait:
+                return CGAffineTransformMakeRotation(-M_PI / 2.0);
+
+            case UIInterfaceOrientationLandscapeRight:
+                return CGAffineTransformMakeRotation(M_PI);
+
+            case UIInterfaceOrientationLandscapeLeft:
+            default:
+                return CGAffineTransformMakeRotation(0);
+        }
+    } else if (fromOrientation == UIInterfaceOrientationLandscapeRight) {
+        switch (toOrientation) {
+            case UIInterfaceOrientationPortrait:
+                return CGAffineTransformMakeRotation(M_PI / 2.0);
+
+            case UIInterfaceOrientationPortraitUpsideDown:
+                return CGAffineTransformMakeRotation(-M_PI / 2.0);
+
+            case UIInterfaceOrientationLandscapeLeft:
+                return CGAffineTransformMakeRotation(M_PI);
+
+            case UIInterfaceOrientationLandscapeRight:
+            default:
+                return CGAffineTransformMakeRotation(0);
+        }
+    } else if (fromOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+        switch (toOrientation) {
+            case UIInterfaceOrientationLandscapeRight:
+                return CGAffineTransformMakeRotation(-M_PI / 2.0);
+
+            case UIInterfaceOrientationLandscapeLeft:
+                return CGAffineTransformMakeRotation(M_PI / 2.0);
+
+            case UIInterfaceOrientationPortrait:
+                return CGAffineTransformMakeRotation(M_PI);
+
+            case UIInterfaceOrientationPortraitUpsideDown:
+            default:
+                return CGAffineTransformMakeRotation(0);
+        }
     }
+    return CGAffineTransformMakeRotation(0);
 }
 
 - (BOOL)shouldPerformZoomingAnimation {
@@ -281,7 +329,23 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
         animationView.transform = view.transform;
     }
     else {
+        // there appears to be a bug when calling [view snapshotViewAfterScreenUpdates:YES],
+        // if the view is not in a window, the view is removed from its superview momentarily
+        // the view is later restored to its original superview, but any layout constraints
+        // between the view and its superview are lost. The following code fixes the issue
+        // by adding back missing constraints
+        UIView *originalSuperview = view.superview;
+        NSMutableArray *originalConstraints = [view.superview.constraints mutableCopy];
         animationView = [view snapshotViewAfterScreenUpdates:YES];
+        if (view.superview != originalSuperview) {
+            [originalConstraints removeObjectsInArray:originalSuperview.constraints];
+            if (originalConstraints.count) {
+                [originalSuperview addSubview:view];
+                [originalSuperview addConstraints:originalConstraints];
+                [originalSuperview setNeedsLayout];
+                [originalSuperview layoutIfNeeded];
+            }
+        }
     }
 
     return animationView;

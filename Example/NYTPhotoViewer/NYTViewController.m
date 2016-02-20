@@ -29,6 +29,18 @@ typedef NS_ENUM(NSUInteger, NYTViewControllerPhotoIndex) {
 
 @implementation NYTViewController
 
+#pragma mark - View lifecycle
+
+- (BOOL)shouldAutorotate {
+    return NO;
+}
+
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+    return UIInterfaceOrientationMaskPortrait;
+}
+
+#pragma mark - Actions
+
 - (IBAction)imageButtonTapped:(id)sender {
     self.photos = [[self class] newTestPhotos];
     
@@ -38,6 +50,8 @@ typedef NS_ENUM(NSUInteger, NYTViewControllerPhotoIndex) {
     
     [self updateImagesOnPhotosViewController:photosViewController afterDelayWithPhotos:self.photos];
 }
+
+#pragma mark - Internal methods
 
 // This method simulates previously blank photos loading their images after some time.
 - (void)updateImagesOnPhotosViewController:(NYTPhotosViewController *)photosViewController afterDelayWithPhotos:(NSArray *)photos {

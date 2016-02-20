@@ -14,6 +14,7 @@
 
 @property (nonatomic) NYTPhotoTransitionAnimator *animator;
 @property (nonatomic) NYTPhotoDismissalInteractionController *interactionController;
+@property (nonatomic, weak) UIViewController *viewController;
 
 @end
 
@@ -22,12 +23,18 @@
 #pragma mark - NSObject
 
 - (instancetype)init {
+    NSAssert(NO, @"Please, use the initWithViewController: initializer");
+    return [self initWithViewController:[[UIViewController alloc] init]];
+}
+
+- (instancetype)initWithViewController:(UIViewController *)viewController {
     self = [super init];
     
     if (self) {
         _animator = [[NYTPhotoTransitionAnimator alloc] init];
         _interactionController = [[NYTPhotoDismissalInteractionController alloc] init];
         _forcesNonInteractiveDismissal = YES;
+        _viewController = viewController;
     }
     
     return self;
@@ -70,7 +77,11 @@
 }
 
 - (id <UIViewControllerInteractiveTransitioning>)interactionControllerForDismissal:(id <UIViewControllerAnimatedTransitioning>)animator {
-    if (self.forcesNonInteractiveDismissal) {
+    // force non interactive if the presenter and presented view controllers have different interface orientations
+    UIInterfaceOrientation presentedInterfaceOrientation = self.viewController.interfaceOrientation;
+    UIInterfaceOrientation presenterInterfaceOrientation = self.viewController.presentingViewController.interfaceOrientation;
+    if (self.forcesNonInteractiveDismissal ||
+            (presentedInterfaceOrientation != presenterInterfaceOrientation)) {
         return nil;
     }
     

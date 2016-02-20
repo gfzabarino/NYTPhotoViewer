@@ -180,8 +180,11 @@ static const UIEdgeInsets NYTPhotosViewControllerCloseButtonImageInsets = {3, 0,
     _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(didPanWithGestureRecognizer:)];
     _singleTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didSingleTapWithGestureRecognizer:)];
 
-    _transitionController = [[NYTPhotoTransitionController alloc] init];
-    self.modalPresentationStyle = UIModalPresentationCustom;
+    _transitionController = [[NYTPhotoTransitionController alloc] initWithViewController:self];
+
+    // setting full screen modal presentation style, so the presenter's supported interface orientations
+    // don't condition this view controller's supported interface orientations
+    self.modalPresentationStyle = UIModalPresentationFullScreen;
     self.transitioningDelegate = _transitionController;
     self.modalPresentationCapturesStatusBarAppearance = YES;
 
