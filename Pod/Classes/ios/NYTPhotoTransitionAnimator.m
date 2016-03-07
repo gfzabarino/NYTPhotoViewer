@@ -115,39 +115,25 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
     if (!startingViewForAnimation) {
         startingViewForAnimation = [[self class] newAnimationViewFromView:self.startingView];
     }
-    
+
     UIView *endingViewForAnimation = self.endingViewForAnimation;
     if (!endingViewForAnimation) {
         endingViewForAnimation = [[self class] newAnimationViewFromView:self.endingView];
     }
 
-    CGAffineTransform finalEndingViewTransform;
-
-    // The following code is a workaround for iOS7's lack of correct orientation information
-    // in the transitionContext's containerView. For non-portrait orientations on iOS 7, we must
-    // manually add a rotation transform to account for the containerView thinking it is always in portrait
     UIViewController *fromViewController = [transitionContext viewControllerForKey:UITransitionContextFromViewControllerKey];
     UIViewController *toViewController = [transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
-    BOOL isOrientationPortrait = UIInterfaceOrientationIsPortrait(fromViewController.interfaceOrientation);
 
     // Correct the endingView and startingView's initial transforms
     endingViewForAnimation.transform = CGAffineTransformConcat([self transformFromOrientation:fromViewController.interfaceOrientation toOrientation:toViewController.interfaceOrientation], endingViewForAnimation.transform);
     startingViewForAnimation.transform = CGAffineTransformConcat([self transformFromOrientation:fromViewController.interfaceOrientation toOrientation:toViewController.interfaceOrientation], startingViewForAnimation.transform);
-    if (![NYTOperatingSystemCompatibilityUtility isiOS8OrGreater] && !isOrientationPortrait) {
-        // Correct the endingView's final transform
-        finalEndingViewTransform = CGAffineTransformConcat([self transformFromOrientation:fromViewController.interfaceOrientation toOrientation:toViewController.interfaceOrientation], self.endingView.transform);
-    }
-    else {
-        finalEndingViewTransform = self.endingView.transform;
-    }
-
-    CGFloat endingViewInitialTransform = CGRectGetHeight(startingViewForAnimation.frame) / CGRectGetHeight(endingViewForAnimation.frame);
+    CGFloat endingViewInitialScale = CGRectGetHeight(startingViewForAnimation.frame) / CGRectGetHeight(endingViewForAnimation.frame);
     CGPoint translatedStartingViewCenter = [[self class] centerPointForView:self.startingView
                                                   translatedToContainerView:containerView];
-    
+
     startingViewForAnimation.center = translatedStartingViewCenter;
-    
-    endingViewForAnimation.transform = CGAffineTransformScale(endingViewForAnimation.transform, endingViewInitialTransform, endingViewInitialTransform);
+
+    endingViewForAnimation.transform = CGAffineTransformScale(endingViewForAnimation.transform, endingViewInitialScale, endingViewInitialScale);
     endingViewForAnimation.center = translatedStartingViewCenter;
     endingViewForAnimation.alpha = 0.0;
     
@@ -177,8 +163,8 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
                               [startingViewForAnimation removeFromSuperview];
                           }];
                      }];
-    
-    CGFloat startingViewFinalTransform = 1.0 / endingViewInitialTransform;
+
+    CGFloat startingViewFinalTransform = 1.0 / endingViewInitialScale;
     CGPoint translatedEndingViewFinalCenter = [[self class] centerPointForView:self.endingView
                                                      translatedToContainerView:containerView];
     
@@ -189,16 +175,16 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
           initialSpringVelocity:0.0
                         options:UIViewAnimationOptionAllowAnimatedContent | UIViewAnimationOptionBeginFromCurrentState
                      animations:^{
-                         endingViewForAnimation.transform = finalEndingViewTransform;
+                         endingViewForAnimation.transform = self.endingView.transform;
                          endingViewForAnimation.center = translatedEndingViewFinalCenter;
-                         startingViewForAnimation.transform = CGAffineTransformScale(startingViewForAnimation.transform, startingViewFinalTransform, startingViewFinalTransform);
+                         startingViewForAnimation.transform = CGAffineTransformScale(self.startingView.transform, startingViewFinalTransform, startingViewFinalTransform);
                          startingViewForAnimation.center = translatedEndingViewFinalCenter;
                      }
                      completion:^(BOOL finished) {
                          [endingViewForAnimation removeFromSuperview];
                          self.endingView.alpha = 1.0;
                          self.startingView.alpha = 1.0;
-        
+
                          [self completeTransitionWithTransitionContext:transitionContext];
                      }];
 }
@@ -310,6 +296,15 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
 
     UIView *animationView;
     if (view.layer.contents) {
+        // this is needed so when the photo view controller is presented and its final size is
+        // different from its design size, its view gets resized to the final size.
+        // If we don't do this, view frames gets wrong values, which in turn breaks the animation.
+        //
+        // NOTE: when view.layer.contents is nil, the snapshotViewAfterScreenUpdates call with a YES parameter
+        // takes care of forcing a layout
+        [view.window setNeedsLayout];
+        [view.window layoutIfNeeded];
+
         if ([view isKindOfClass:[UIImageView class]]) {
             // The case of UIImageView is handled separately since the mere layer's contents (i.e. CGImage in this case) doesn't
             // seem to contain proper informations about the image orientation for portrait images taken directly on the device.
