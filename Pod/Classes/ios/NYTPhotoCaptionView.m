@@ -58,11 +58,15 @@ static const CGFloat NYTPhotoCaptionViewVerticalMargin = 7.0;
 - (void)layoutSubviews {
     [super layoutSubviews];
 
-    // On iOS 8.x, when this view is height-constrained, neither `self.bounds` nor `self.layer.bounds` reflects the new layout height immediately after `[super layoutSubviews]`. Both of those properties appear correct in the next runloop.
-    // This problem doesn't affect iOS 9 and there may be a better solution; PRs welcome.
-    dispatch_async(dispatch_get_main_queue(), ^{
+    if ([[[UIDevice currentDevice] systemVersion] floatValue] < 9.0f) {
+        // On iOS 8.x, when this view is height-constrained, neither `self.bounds` nor `self.layer.bounds` reflects the new layout height immediately after `[super layoutSubviews]`. Both of those properties appear correct in the next runloop.
+        // This problem doesn't affect iOS 9 and there may be a better solution; PRs welcome.
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.gradientLayer.frame = self.layer.bounds;
+        });
+    } else {
         self.gradientLayer.frame = self.layer.bounds;
-    });
+    }
 }
 
 - (CGSize)intrinsicContentSize {
