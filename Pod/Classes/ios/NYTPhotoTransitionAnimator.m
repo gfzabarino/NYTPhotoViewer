@@ -357,6 +357,8 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
 }
 
 - (void)animateTransition:(id <UIViewControllerContextTransitioning>)transitionContext {
+    [[UIApplication sharedApplication] beginIgnoringInteractionEvents];
+
     [self setupTransitionContainerHierarchyWithTransitionContext:transitionContext];
     
     [self performFadeAnimationWithTransitionContext:transitionContext];
@@ -364,6 +366,10 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
     if (self.shouldPerformZoomingAnimation) {
         [self performZoomingAnimationWithTransitionContext:transitionContext];
     }
+}
+
+- (void)animationEnded:(BOOL)transitionCompleted {
+    [[UIApplication sharedApplication] endIgnoringInteractionEvents];
 }
 
 @end
