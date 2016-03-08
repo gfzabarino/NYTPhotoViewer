@@ -91,7 +91,12 @@
     self.interactionController.animator = animator;
     self.interactionController.shouldAnimateUsingAnimator = self.endingView != nil;
     self.interactionController.viewToHideWhenBeginningTransition = self.startingView ? self.endingView : nil;
-    
+
+    // occasionally, if we do this on the interactive transitioning's startInteractiveTransition: method,
+    // the ending view is still visible on the first few frames of the interactive animation
+    // setting this here fixes this issue
+    self.interactionController.viewToHideWhenBeginningTransition.alpha = 0.0;
+
     return self.interactionController;
 }
 
