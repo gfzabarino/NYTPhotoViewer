@@ -190,7 +190,7 @@ static const UIEdgeInsets NYTPhotosViewControllerCloseButtonImageInsets = {3, 0,
 
     UIImage *image;
     UIImage *landscapeImage;
-    if ([UIImage resolveInstanceMethod:@selector(imageNamed:inBundle:compatibleWithTraitCollection:)]) {
+    if ([UIImage respondsToSelector:@selector(imageNamed:inBundle:compatibleWithTraitCollection:)]) {
         image = [UIImage imageNamed:@"NYTPhotoViewerCloseButtonX" inBundle:[NSBundle nyt_photoViewerResourceBundle] compatibleWithTraitCollection:nil];
         landscapeImage = [UIImage imageNamed:@"NYTPhotoViewerCloseButtonXLandscape" inBundle:[NSBundle nyt_photoViewerResourceBundle] compatibleWithTraitCollection:nil];
     }
