@@ -25,8 +25,8 @@ static const CGFloat NYTPhotoDismissalInteractionControllerReturnToCenterVelocit
 - (void)didPanWithPanGestureRecognizer:(UIPanGestureRecognizer *)panGestureRecognizer viewToPan:(UIView *)viewToPan anchorPoint:(CGPoint)anchorPoint {
     UIView *fromView = [self.transitionContext viewForKey:UITransitionContextFromViewKey];
     CGPoint translatedPanGesturePoint = [panGestureRecognizer translationInView:fromView];
-    CGPoint newCenterPoint = CGPointMake(anchorPoint.x, anchorPoint.y + translatedPanGesturePoint.y);
-    
+    CGPoint newCenterPoint = CGPointMake(anchorPoint.x + translatedPanGesturePoint.x, anchorPoint.y + translatedPanGesturePoint.y);
+
     // Pan the view on pace with the pan gesture.
     viewToPan.center = newCenterPoint;
     
@@ -47,7 +47,7 @@ static const CGFloat NYTPhotoDismissalInteractionControllerReturnToCenterVelocit
     CGFloat velocityY = [panGestureRecognizer velocityInView:panGestureRecognizer.view].y;
     
     CGFloat animationDuration = (ABS(velocityY) * NYTPhotoDismissalInteractionControllerReturnToCenterVelocityAnimationRatio) + 0.2;
-    CGFloat animationCurve = UIViewAnimationOptionCurveEaseOut;
+    UIViewAnimationOptions animationCurve = UIViewAnimationOptionCurveEaseOut;
     CGPoint finalPageViewCenterPoint = anchorPoint;
     CGFloat finalBackgroundAlpha = 1.0;
     
@@ -161,6 +161,20 @@ static const CGFloat NYTPhotoDismissalInteractionControllerReturnToCenterVelocit
     self.viewToHideWhenBeginningTransition.alpha = 0.0;
     
     self.transitionContext = transitionContext;
+
+    UIView *fromView = [transitionContext viewForKey:UITransitionContextFromViewKey];
+    UIView *toView = [transitionContext viewForKey:UITransitionContextToViewKey];
+
+    UIViewController *toViewController = [transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
+    toView.frame = [transitionContext finalFrameForViewController:toViewController];
+
+    // when the presented view controller uses a full screen modal presentation style
+    // the presenter's view is removed from the window, so we add it back before
+    // transitioning
+    if (![toView isDescendantOfView:transitionContext.containerView]) {
+        [transitionContext.containerView addSubview:toView];
+        [transitionContext.containerView bringSubviewToFront:fromView];
+    }
 }
 
 @end
