@@ -14,6 +14,7 @@
 
 @property (nonatomic) NYTPhotoTransitionAnimator *animator;
 @property (nonatomic) NYTPhotoDismissalInteractionController *interactionController;
+@property (nonatomic, weak) UIViewController *viewController;
 
 @end
 
@@ -22,14 +23,20 @@
 #pragma mark - NSObject
 
 - (instancetype)init {
+    NSAssert(NO, @"Please, use the initWithViewController: initializer");
+    return [self initWithViewController:[[UIViewController alloc] init]];
+}
+
+- (instancetype)initWithViewController:(UIViewController *)viewController {
     self = [super init];
-    
+
     if (self) {
         _animator = [[NYTPhotoTransitionAnimator alloc] init];
         _interactionController = [[NYTPhotoDismissalInteractionController alloc] init];
         _forcesNonInteractiveDismissal = YES;
+        _viewController = viewController;
     }
-    
+
     return self;
 }
 
@@ -65,12 +72,16 @@
 
 - (id <UIViewControllerAnimatedTransitioning>)animationControllerForDismissedController:(UIViewController *)dismissed {
     self.animator.dismissing = YES;
-    
+    self.endingView.alpha = 0.0;
     return self.animator;
 }
 
 - (id <UIViewControllerInteractiveTransitioning>)interactionControllerForDismissal:(id <UIViewControllerAnimatedTransitioning>)animator {
-    if (self.forcesNonInteractiveDismissal) {
+    // force non interactive if the presenter and presented view controllers have different interface orientations
+    UIInterfaceOrientation presentedInterfaceOrientation = self.viewController.interfaceOrientation;
+    UIInterfaceOrientation presenterInterfaceOrientation = self.viewController.presentingViewController.interfaceOrientation;
+    if (self.forcesNonInteractiveDismissal ||
+            (presentedInterfaceOrientation != presenterInterfaceOrientation)) {
         return nil;
     }
     
@@ -80,7 +91,12 @@
     self.interactionController.animator = animator;
     self.interactionController.shouldAnimateUsingAnimator = self.endingView != nil;
     self.interactionController.viewToHideWhenBeginningTransition = self.startingView ? self.endingView : nil;
-    
+
+    // occasionally, if we do this on the interactive transitioning's startInteractiveTransition: method,
+    // the ending view is still visible on the first few frames of the interactive animation
+    // setting this here fixes this issue
+    self.interactionController.viewToHideWhenBeginningTransition.alpha = 0.0;
+
     return self.interactionController;
 }
 

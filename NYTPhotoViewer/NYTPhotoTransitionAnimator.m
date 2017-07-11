@@ -120,16 +120,20 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
     if (!endingViewForAnimation) {
         endingViewForAnimation = [[self class] newAnimationViewFromView:self.endingView];
     }
-    
-    CGAffineTransform finalEndingViewTransform = self.endingView.transform;
 
-    CGFloat endingViewInitialTransform = CGRectGetHeight(startingViewForAnimation.frame) / CGRectGetHeight(endingViewForAnimation.frame);
+    UIViewController *fromViewController = [transitionContext viewControllerForKey:UITransitionContextFromViewControllerKey];
+    UIViewController *toViewController = [transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
+
+    // Correct the endingView and startingView's initial transforms
+    endingViewForAnimation.transform = CGAffineTransformConcat([self transformFromOrientation:fromViewController.interfaceOrientation toOrientation:toViewController.interfaceOrientation], endingViewForAnimation.transform);
+    startingViewForAnimation.transform = CGAffineTransformConcat([self transformFromOrientation:fromViewController.interfaceOrientation toOrientation:toViewController.interfaceOrientation], startingViewForAnimation.transform);
+    CGFloat endingViewInitialScale = CGRectGetHeight(startingViewForAnimation.frame) / CGRectGetHeight(endingViewForAnimation.frame);
     CGPoint translatedStartingViewCenter = [[self class] centerPointForView:self.startingView
                                                   translatedToContainerView:containerView];
     
     startingViewForAnimation.center = translatedStartingViewCenter;
-    
-    endingViewForAnimation.transform = CGAffineTransformScale(endingViewForAnimation.transform, endingViewInitialTransform, endingViewInitialTransform);
+
+    endingViewForAnimation.transform = CGAffineTransformScale(endingViewForAnimation.transform, endingViewInitialScale, endingViewInitialScale);
     endingViewForAnimation.center = translatedStartingViewCenter;
     endingViewForAnimation.alpha = 0.0;
     
@@ -160,7 +164,7 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
                           }];
                      }];
     
-    CGFloat startingViewFinalTransform = 1.0 / endingViewInitialTransform;
+    CGFloat startingViewFinalTransform = 1.0 / endingViewInitialScale;
     CGPoint translatedEndingViewFinalCenter = [[self class] centerPointForView:self.endingView
                                                      translatedToContainerView:containerView];
     
@@ -171,9 +175,9 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
           initialSpringVelocity:0.0
                         options:UIViewAnimationOptionAllowAnimatedContent | UIViewAnimationOptionBeginFromCurrentState
                      animations:^{
-                         endingViewForAnimation.transform = finalEndingViewTransform;
+                         endingViewForAnimation.transform = self.endingView.transform;
                          endingViewForAnimation.center = translatedEndingViewFinalCenter;
-                         startingViewForAnimation.transform = CGAffineTransformScale(startingViewForAnimation.transform, startingViewFinalTransform, startingViewFinalTransform);
+                         startingViewForAnimation.transform = CGAffineTransformScale(self.startingView.transform, startingViewFinalTransform, startingViewFinalTransform);
                          startingViewForAnimation.center = translatedEndingViewFinalCenter;
                      }
                      completion:^(BOOL finished) {
@@ -186,6 +190,71 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
 }
 
 #pragma mark - Convenience
+
+- (CGAffineTransform)transformFromOrientation:(UIInterfaceOrientation)fromOrientation toOrientation:(UIInterfaceOrientation)toOrientation {
+    if (fromOrientation == UIInterfaceOrientationPortrait) {
+        switch (toOrientation) {
+            case UIInterfaceOrientationLandscapeLeft:
+                return CGAffineTransformMakeRotation(M_PI / 2.0);
+
+            case UIInterfaceOrientationLandscapeRight:
+                return CGAffineTransformMakeRotation(-M_PI / 2.0);
+
+            case UIInterfaceOrientationPortraitUpsideDown:
+                return CGAffineTransformMakeRotation(M_PI);
+
+            case UIInterfaceOrientationPortrait:
+            default:
+                return CGAffineTransformMakeRotation(0);
+        }
+    } else if (fromOrientation == UIInterfaceOrientationLandscapeLeft) {
+        switch (toOrientation) {
+            case UIInterfaceOrientationPortraitUpsideDown:
+                return CGAffineTransformMakeRotation(M_PI / 2.0);
+
+            case UIInterfaceOrientationPortrait:
+                return CGAffineTransformMakeRotation(-M_PI / 2.0);
+
+            case UIInterfaceOrientationLandscapeRight:
+                return CGAffineTransformMakeRotation(M_PI);
+
+            case UIInterfaceOrientationLandscapeLeft:
+            default:
+                return CGAffineTransformMakeRotation(0);
+        }
+    } else if (fromOrientation == UIInterfaceOrientationLandscapeRight) {
+        switch (toOrientation) {
+            case UIInterfaceOrientationPortrait:
+                return CGAffineTransformMakeRotation(M_PI / 2.0);
+
+            case UIInterfaceOrientationPortraitUpsideDown:
+                return CGAffineTransformMakeRotation(-M_PI / 2.0);
+
+            case UIInterfaceOrientationLandscapeLeft:
+                return CGAffineTransformMakeRotation(M_PI);
+
+            case UIInterfaceOrientationLandscapeRight:
+            default:
+                return CGAffineTransformMakeRotation(0);
+        }
+    } else if (fromOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+        switch (toOrientation) {
+            case UIInterfaceOrientationLandscapeRight:
+                return CGAffineTransformMakeRotation(-M_PI / 2.0);
+
+            case UIInterfaceOrientationLandscapeLeft:
+                return CGAffineTransformMakeRotation(M_PI / 2.0);
+
+            case UIInterfaceOrientationPortrait:
+                return CGAffineTransformMakeRotation(M_PI);
+
+            case UIInterfaceOrientationPortraitUpsideDown:
+            default:
+                return CGAffineTransformMakeRotation(0);
+        }
+    }
+    return CGAffineTransformMakeRotation(0);
+}
 
 - (BOOL)shouldPerformZoomingAnimation {
     return self.startingView && self.endingView;
@@ -227,6 +296,15 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
 
     UIView *animationView;
     if (view.layer.contents) {
+        // this is needed so when the photo view controller is presented and its final size is
+        // different from its design size, its view gets resized to the final size.
+        // If we don't do this, view frames gets wrong values, which in turn breaks the animation.
+        //
+        // NOTE: when view.layer.contents is nil, the snapshotViewAfterScreenUpdates call with a YES parameter
+        // takes care of forcing a layout
+        [view.window setNeedsLayout];
+        [view.window layoutIfNeeded];
+
         if ([view isKindOfClass:[UIImageView class]]) {
             // The case of UIImageView is handled separately since the mere layer's contents (i.e. CGImage in this case) doesn't
             // seem to contain proper informations about the image orientation for portrait images taken directly on the device.
@@ -246,7 +324,23 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
         animationView.transform = view.transform;
     }
     else {
+        // there appears to be a bug when calling [view snapshotViewAfterScreenUpdates:YES],
+        // if the view is not in a window, the view is removed from its superview momentarily
+        // the view is later restored to its original superview, but any layout constraints
+        // between the view and its superview are lost. The following code fixes the issue
+        // by adding back missing constraints
+        UIView *originalSuperview = view.superview;
+        NSMutableArray *originalConstraints = [view.superview.constraints mutableCopy];
         animationView = [view snapshotViewAfterScreenUpdates:YES];
+        if (view.superview != originalSuperview) {
+            [originalConstraints removeObjectsInArray:originalSuperview.constraints];
+            if (originalConstraints.count) {
+                [originalSuperview addSubview:view];
+                [originalSuperview addConstraints:originalConstraints];
+                [originalSuperview setNeedsLayout];
+                [originalSuperview layoutIfNeeded];
+            }
+        }
     }
 
     return animationView;
@@ -263,6 +357,8 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
 }
 
 - (void)animateTransition:(id <UIViewControllerContextTransitioning>)transitionContext {
+    [[UIApplication sharedApplication] beginIgnoringInteractionEvents];
+
     [self setupTransitionContainerHierarchyWithTransitionContext:transitionContext];
     
     [self performFadeAnimationWithTransitionContext:transitionContext];
@@ -270,6 +366,10 @@ static const CGFloat NYTPhotoTransitionAnimatorSpringDamping = 0.9;
     if (self.shouldPerformZoomingAnimation) {
         [self performZoomingAnimationWithTransitionContext:transitionContext];
     }
+}
+
+- (void)animationEnded:(BOOL)transitionCompleted {
+    [[UIApplication sharedApplication] endIgnoringInteractionEvents];
 }
 
 @end
