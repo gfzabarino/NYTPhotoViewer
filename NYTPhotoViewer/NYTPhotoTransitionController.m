@@ -66,7 +66,16 @@
 
 - (id <UIViewControllerAnimatedTransitioning>)animationControllerForPresentedController:(UIViewController *)presented presentingController:(UIViewController *)presenting sourceController:(UIViewController *)source {
     self.animator.dismissing = NO;
-    
+    BOOL changingOrientation = [UIDevice currentDevice].orientation > UIDeviceOrientationUnknown &&
+            [UIDevice currentDevice].orientation <= UIDeviceOrientationLandscapeRight &&
+            presenting.interfaceOrientation != (UIInterfaceOrientation)[UIDevice currentDevice].orientation;
+    if (changingOrientation) {
+        // we only use sourceViewForAnimating when animating orientation changes, when presenting
+        // this causes a bit of flickering, but often users won't execute this scenario
+        self.startingView.alpha = 0.0;
+        self.animator.sourceViewForAnimating = [[self.animator class] newAnimationViewFromView:presenting.view];
+        self.startingView.alpha = 1.0;
+    }
     return self.animator;
 }
 
@@ -80,14 +89,14 @@
     // force non interactive if the presenter and presented view controllers have different interface orientations
     UIInterfaceOrientation presentedInterfaceOrientation = self.viewController.interfaceOrientation;
     UIInterfaceOrientation presenterInterfaceOrientation = self.viewController.presentingViewController.interfaceOrientation;
+    UIView *toView = self.viewController.presentingViewController.view;
+    self.animator.originalPresenterTransform = toView.transform;
+    self.interactionController.originalPresenterTransform = toView.transform;
     if (self.forcesNonInteractiveDismissal ||
             (presentedInterfaceOrientation != presenterInterfaceOrientation)) {
         return nil;
     }
-    
-    // The interaction controller will be hiding the ending view, so we should get and set a visible version now.
-    self.animator.endingViewForAnimation = [[self.animator class] newAnimationViewFromView:self.endingView];
-    
+
     self.interactionController.animator = animator;
     self.interactionController.shouldAnimateUsingAnimator = self.endingView != nil;
     self.interactionController.viewToHideWhenBeginningTransition = self.startingView ? self.endingView : nil;

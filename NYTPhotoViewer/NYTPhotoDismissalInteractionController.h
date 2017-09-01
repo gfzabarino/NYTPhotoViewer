@@ -31,6 +31,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL shouldAnimateUsingAnimator;
 
 /**
+ * Should be set before starting a dismissal.
+ */
+@property (nonatomic) CGAffineTransform originalPresenterTransform;
+
+/**
  *  Call when new events are received from a `UIPanGestureRecognizer`. Pans the appropriate view, and makes decisions when to finish or cancel the interactive transition back to the anchor point. Intended to be called after a dismissal has started with `dismissViewControllerAnimated:completion:`.
  *
  *  @param panGestureRecognizer The `UIPanGestureRecognizer` that caused the pan event.

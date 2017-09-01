@@ -71,6 +71,17 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) CGFloat zoomingAnimationSpringDamping;
 
 /**
+ * Should be set before starting a dismissal.
+ */
+@property (nonatomic) CGAffineTransform originalPresenterTransform;
+
+/**
+ * When presenting a view controller in a different orientation, navigation bars wrongly change their layout, this
+ * property should be set with a copy of the source view before starting to animate.
+ */
+@property (nonatomic, nullable) UIView *sourceViewForAnimating;
+
+/**
  *  Convenience method for creating a view for animation from another arbitrary view. Attempts to create an identical view in the most efficient way possible. Returns `nil` if the passed-in view is `nil`.
  *
  *  @param view The view from which to create the animation.
@@ -78,6 +89,12 @@ NS_ASSUME_NONNULL_BEGIN
  *  @return A new view identical in appearance to the passed-in view, with relevant properties transferred. Not a member of any view hierarchy. Return `nil` if the passed-in view is `nil`.
  */
 + (nullable UIView *)newAnimationViewFromView:(nullable UIView *)view;
+
+/**
+ * Applies a zoom transform meant to be aplied to the presenter view.
+ * @param view
+ */
++ (void)applyZoomTransformToPresenterView:(UIView *)view;
 
 @end
 

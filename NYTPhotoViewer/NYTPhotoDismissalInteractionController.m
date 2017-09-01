@@ -7,6 +7,7 @@
 //
 
 #import "NYTPhotoDismissalInteractionController.h"
+#import "NYTPhotoTransitionAnimator.h"
 
 static const CGFloat NYTPhotoDismissalInteractionControllerPanDismissDistanceRatio = 50.0 / 667.0; // distance over iPhone 6 height.
 static const CGFloat NYTPhotoDismissalInteractionControllerPanDismissMaximumDuration = 0.45;
@@ -34,7 +35,7 @@ static const CGFloat NYTPhotoDismissalInteractionControllerReturnToCenterVelocit
     
     CGFloat backgroundAlpha = [self backgroundAlphaForPanningWithVerticalDelta:verticalDelta];
     fromView.backgroundColor = [fromView.backgroundColor colorWithAlphaComponent:backgroundAlpha];
-    
+
     if (panGestureRecognizer.state == UIGestureRecognizerStateEnded) {
         [self finishPanWithPanGestureRecognizer:panGestureRecognizer verticalDelta:verticalDelta viewToPan:viewToPan anchorPoint:anchorPoint];
     }
@@ -78,9 +79,10 @@ static const CGFloat NYTPhotoDismissalInteractionControllerReturnToCenterVelocit
     }
     
     if (!didAnimateUsingAnimator) {
+        UIView *toView = [self.transitionContext viewForKey:UITransitionContextToViewKey];
         [UIView animateWithDuration:animationDuration delay:0 options:animationCurve animations:^{
             viewToPan.center = finalPageViewCenterPoint;
-            
+            toView.transform = self.originalPresenterTransform;
             fromView.backgroundColor = [fromView.backgroundColor colorWithAlphaComponent:finalBackgroundAlpha];
         } completion:^(BOOL finished) {
             if (isDismissing) {
@@ -88,7 +90,7 @@ static const CGFloat NYTPhotoDismissalInteractionControllerReturnToCenterVelocit
             }
             else {
                 [self.transitionContext cancelInteractiveTransition];
-                
+
                 if (![[self class] isRadar20070670Fixed]) {
                     [self fixCancellationStatusBarAppearanceBug];
                 }
@@ -108,10 +110,10 @@ static const CGFloat NYTPhotoDismissalInteractionControllerReturnToCenterVelocit
 
 - (CGFloat)backgroundAlphaForPanningWithVerticalDelta:(CGFloat)verticalDelta {
     CGFloat startingAlpha = 1.0;
-    CGFloat finalAlpha = 0.1;
-    CGFloat totalAvailableAlpha = startingAlpha - finalAlpha;
+    CGFloat minimumAlpha = 0.5;
+    CGFloat totalAvailableAlpha = startingAlpha - minimumAlpha;
     
-    CGFloat maximumDelta = CGRectGetHeight([self.transitionContext viewForKey:UITransitionContextFromViewKey].bounds) / 2.0; // Arbitrary value.
+    CGFloat maximumDelta = CGRectGetHeight([self.transitionContext viewForKey:UITransitionContextFromViewKey].bounds) / 2.0 * 0.6;
     CGFloat deltaAsPercentageOfMaximum = MIN(ABS(verticalDelta) / maximumDelta, 1.0);
     
     return startingAlpha - (deltaAsPercentageOfMaximum * totalAvailableAlpha);
@@ -167,6 +169,8 @@ static const CGFloat NYTPhotoDismissalInteractionControllerReturnToCenterVelocit
 
     UIViewController *toViewController = [transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
     toView.frame = [transitionContext finalFrameForViewController:toViewController];
+
+    [NYTPhotoTransitionAnimator applyZoomTransformToPresenterView:toView];
 
     // when the presented view controller uses a full screen modal presentation style
     // the presenter's view is removed from the window, so we add it back before

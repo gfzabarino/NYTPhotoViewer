@@ -48,6 +48,8 @@ static const UIEdgeInsets NYTPhotosViewControllerCloseButtonImageInsets = {3, 0,
 
 @property (nonatomic) BOOL shouldHandleLongPress;
 @property (nonatomic) BOOL overlayWasHiddenBeforeTransition;
+@property (nonatomic) BOOL hideStatusBar;
+@property (nonatomic) BOOL originalStatusBarHidden;
 
 @property (nonatomic, readonly) NYTPhotoViewController *currentPhotoViewController;
 @property (nonatomic, readonly) UIView *referenceViewForCurrentPhoto;
@@ -124,6 +126,7 @@ static const UIEdgeInsets NYTPhotosViewControllerCloseButtonImageInsets = {3, 0,
     }
     
     self.transitionController.endingView = endingView;
+    self.hideStatusBar = self.originalStatusBarHidden = NO;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -131,6 +134,19 @@ static const UIEdgeInsets NYTPhotosViewControllerCloseButtonImageInsets = {3, 0,
     
     if (!self.overlayWasHiddenBeforeTransition) {
         [self setOverlayViewHidden:NO animated:YES];
+    }
+    
+    if (!self.hideStatusBar) {
+        self.hideStatusBar = YES;
+        [self setNeedsStatusBarAppearanceUpdate];
+    }
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    if (self.hideStatusBar != self.originalStatusBarHidden) {
+        self.hideStatusBar = self.originalStatusBarHidden;
+        [self setNeedsStatusBarAppearanceUpdate];
     }
 }
 
@@ -142,7 +158,7 @@ static const UIEdgeInsets NYTPhotosViewControllerCloseButtonImageInsets = {3, 0,
 }
 
 - (BOOL)prefersStatusBarHidden {
-    return YES;
+    return self.hideStatusBar;
 }
 
 - (UIStatusBarAnimation)preferredStatusBarUpdateAnimation {
@@ -389,7 +405,9 @@ static const UIEdgeInsets NYTPhotosViewControllerCloseButtonImageInsets = {3, 0,
     }
     
     [[NSNotificationCenter defaultCenter] postNotificationName:NYTPhotosViewControllerWillDismissNotification object:self];
-    
+
+    self.hideStatusBar = NO;
+    [self setNeedsStatusBarAppearanceUpdate];
     [super dismissViewControllerAnimated:animated completion:^{
         BOOL isStillOnscreen = self.view.window != nil; // Happens when the dismissal is canceled.
         
